@@ -1,0 +1,69 @@
+@media (max-width: 760px) {
+  .landing-proof-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-proof-grid > div {
+    border-left: none !important;
+    border-top: 1px solid #242424;
+  }
+
+  .landing-proof-grid > div:first-child {
+    border-top: none;
+  }
+
+  .landing-steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    margin-top: 38px !important;
+  }
+
+  .landing-steps-grid > div {
+    border-right: none !important;
+    border-bottom: 1px solid #242424;
+    padding: 0 0 24px !important;
+    margin: 0 0 24px !important;
+  }
+
+  .landing-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-flow-grid,
+  .landing-benefits-grid {
+    grid-template-columns: 1fr !important;
+    gap: 46px !important;
+  }
+
+  .landing-flow-grid > div:last-child {
+    justify-self: stretch !important;
+  }
+
+  .landing-dashboard-mock {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-dashboard-mock aside {
+    display: none;
+  }
+
+  .landing-preview-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-preview-cards > div:not(:first-child) {
+    display: none;
+  }
+
+  footer > div:last-child {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-flow-grid,
+  .landing-benefits-grid {
+    padding-top: 78px !important;
+    padding-bottom: 78px !important;
+  }
+}

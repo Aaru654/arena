@@ -1,0 +1,27 @@
+'use client';
+
+import { useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { SuperTenant, VaultVideo } from './types';
+
+const emptyForm = { title: '', description: '', video_url: '', thumbnail_url: '', category: 'general', tenant_id: '', is_public: true };
+
+export default function VideoVault({ initialVideos, tenants }: { initialVideos: VaultVideo[]; tenants: SuperTenant[] }) {
+  const [videos, setVideos] = useState(initialVideos);
+  const [form, setForm] = useState(emptyForm);
+  const [file, setFile] = useState<File | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const submit = async () => {
+    const data = new FormData();
+    Object.entries(form).forEach(([key, value]) => data.append(key, String(value)));
+    if (file) data.append('file', file);
+    const response = await fetch(editing ? `/api/super/videos/${editing}` : '/api/super/videos', { method: editing ? 'PATCH' : 'POST', headers: editing ? { 'Content-Type': 'application/json' } : undefined, body: editing ? JSON.stringify(form) : data });
+    const result = await response.json();
+    if (!response.ok) { toast.error(result.message || 'Unable to save video'); return; }
+    setVideos((current) => editing ? current.map((video) => video.id === editing ? result.video : video) : [result.video, ...current]); setForm(emptyForm); setFile(null); setEditing(null); toast.success(editing ? 'Video updated' : 'Video added');
+  };
+  const edit = (video: VaultVideo) => setForm({ title: video.title, description: video.description || '', video_url: video.video_url, thumbnail_url: video.thumbnail_url || '', category: video.category, tenant_id: video.tenant_id || '', is_public: video.is_public });
+  const remove = async (video: VaultVideo) => { if (!window.confirm(`Delete ${video.title}?`)) return; const response = await fetch(`/api/super/videos/${video.id}`, { method: 'DELETE' }); if (!response.ok) toast.error('Unable to delete video'); else { setVideos((current) => current.filter((item) => item.id !== video.id)); toast.success('Video deleted'); } };
+  return <div className="space-y-6"><div className="grid gap-4 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-5 md:grid-cols-2"><input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Title" className="super-input" /><input value={form.video_url} onChange={(event) => setForm({ ...form, video_url: event.target.value })} placeholder="Video URL or upload file" className="super-input" /><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Description" className="super-input" /><input value={form.thumbnail_url} onChange={(event) => setForm({ ...form, thumbnail_url: event.target.value })} placeholder="Thumbnail URL" className="super-input" /><select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="super-input"><option value="properties">Properties</option><option value="collections">Collections</option><option value="whatsapp">WhatsApp</option><option value="general">General</option></select><select value={form.tenant_id} onChange={(event) => setForm({ ...form, tenant_id: event.target.value })} className="super-input"><option value="">Global video</option>{tenants.map((tenant) => <option key={tenant.id} value={tenant.id}>{tenant.name}</option>)}</select><input type="file" accept="video/mp4,video/*" onChange={(event) => setFile(event.target.files?.[0] || null)} className="text-sm text-[var(--text-muted)]" /><label className="flex items-center gap-2 text-sm text-[var(--foreground)]"><input type="checkbox" checked={form.is_public} onChange={(event) => setForm({ ...form, is_public: event.target.checked })} />Public</label><div className="md:col-span-2"><button type="button" onClick={submit} className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm text-[var(--accent-foreground)]">{editing ? 'Save Changes' : 'Add Video'}</button>{editing && <button type="button" onClick={() => { setEditing(null); setForm(emptyForm); }} className="ml-2 rounded-md px-4 py-2 text-sm text-[var(--text-muted)]">Cancel</button>}</div></div><div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--bg-surface)]"><table className="w-full text-left text-sm"><thead className="border-b border-[var(--border)] text-xs uppercase text-[var(--text-muted)]"><tr><th className="px-4 py-3">Title</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Tenant</th><th className="px-4 py-3">Public</th><th className="px-4 py-3" /></tr></thead><tbody className="divide-y divide-[var(--border)]">{videos.map((video) => <tr key={video.id}><td className="px-4 py-3">{video.title}</td><td className="px-4 py-3 capitalize text-[var(--text-muted)]">{video.category}</td><td className="px-4 py-3 text-[var(--text-muted)]">{tenants.find((tenant) => tenant.id === video.tenant_id)?.name || 'Global'}</td><td className="px-4 py-3 text-[var(--text-muted)]">{video.is_public ? 'Yes' : 'No'}</td><td className="px-4 py-3"><button type="button" onClick={() => { setEditing(video.id); edit(video); }} className="mr-3 text-[var(--text-muted)] hover:text-[var(--foreground)]"><Pencil className="inline h-4 w-4" /></button><button type="button" onClick={() => remove(video)} className="text-[var(--text-muted)] hover:text-red-400"><Trash2 className="inline h-4 w-4" /></button></td></tr>)}</tbody></table></div></div>;
+}
